@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Auto-Wächter">
+<title>Auto-Wächter</title>
+<style>
+:root { --bg:#edf3ef; --surface:#fff; --surface-2:#f3f7f4; --ink:#0f1c16; --muted:#55685e; --line:#d4e0d8; --sign:#0b7a43; --sign-soft:#e0f0e6; --on-sign:#fff; --warn:#a6651a; --warn-soft:#fbf0e1; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg:#08120d; --surface:#101c16; --surface-2:#16251e; --ink:#e5efe9; --muted:#92a89c; --line:#233a2f; --sign:#3fbf7f; --sign-soft:#15352a; --on-sign:#04110a; --warn:#e0a457; --warn-soft:#33260f; color-scheme: dark; } }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 120px max(16px, env(safe-area-inset-left)); }
+main { max-width: 560px; margin: 0 auto; display: grid; gap: 14px; }
+h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 8px 2px 0; }
+.muted { color: var(--muted); font-size: 14px; margin: 0; }
+.tiny { color: var(--muted); font-size: 12.5px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
+.card.off { background: var(--surface-2); }
+.card.off .w-name { color: var(--muted); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.w-name { font-weight: 700; font-size: 17px; }
+.w-sum { font-size: 14px; color: var(--muted); }
+.link { border: 0; background: none; color: var(--sign); font: 600 15px inherit; font-family: inherit; cursor: pointer; padding: 4px 0; justify-self: start; }
+.add { border: 1.5px dashed var(--sign); background: none; color: var(--sign); border-radius: 14px; padding: 14px; font: 600 16px inherit; font-family: inherit; cursor: pointer; }
+.switch { appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 999px; background: var(--line); position: relative; cursor: pointer; flex: none; margin: 0; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch:checked { background: var(--sign); }
+.switch:checked::after { transform: translateX(18px); }
+.field { display: grid; gap: 6px; }
+.lbl { font-weight: 600; font-size: 14px; }
+input.txt, select { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: 16px inherit; font-family: inherit; background: var(--surface-2); color: var(--ink); }
+.add-model { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; }
+.add-model select { min-width: 0; }
+.plus { border: 0; border-radius: 10px; background: var(--sign); color: var(--on-sign); font: 700 20px inherit; width: 44px; cursor: pointer; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; padding: 6px 6px 6px 11px; border-radius: 999px; background: var(--sign-soft); color: var(--sign); font-weight: 600; }
+.pill button { border: 0; background: none; color: inherit; font: 700 16px inherit; cursor: pointer; padding: 0 5px; }
+.toggle { border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 600 14px inherit; font-family: inherit; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+.toggle[aria-pressed="true"] { background: var(--sign-soft); color: var(--sign); border-color: var(--sign); }
+.segs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.segs button { border: 0; background: none; padding: 8px 4px; border-radius: 8px; font: 600 14px inherit; font-family: inherit; color: var(--muted); cursor: pointer; }
+.segs button[aria-pressed="true"] { background: var(--surface); color: var(--sign); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.row label { cursor: pointer; }
+.hint { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+.range-top { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
+.range-top b { font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--sign); }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 12px max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+.bar-in { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 13px; font: 600 16px inherit; font-family: inherit; cursor: pointer; text-align: center; }
+.btn.primary { background: var(--sign); border-color: var(--sign); color: var(--on-sign); }
+.btn.danger { color: var(--warn); }
+.btn:disabled { opacity: .5; }
+.status { font-size: 14px; margin: 0; min-height: 1.4em; }
+.status.err { color: var(--warn); }
+.status.ok { color: var(--sign); }
+.note { background: var(--warn-soft); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+details summary { cursor: pointer; font-weight: 600; }
+ol { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+code { font-size: 13px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--sign); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <div style="display:grid;gap:4px">
+    <h1 id="title">Auto-Wächter</h1>
+    <p class="muted" id="sub">Lade Wächter …</p>
+  </div>
+
+  <div id="list" style="display:grid;gap:10px"></div>
+
+  <section id="editor" hidden style="display:grid;gap:14px"></section>
+
+  <div id="general" style="display:grid;gap:10px">
+    <h2>Allgemein</h2>
+    <div class="card">
+      <div class="row"><label for="night">Nachtruhe 22–7 Uhr<span class="hint">Nachts gesammelt, Meldung um 7 Uhr</span></label><input class="switch" type="checkbox" id="night"></div>
+    </div>
+    <h2>Schlüssel zum Speichern</h2>
+    <div class="card">
+      <p class="muted" id="key-state"></p>
+      <details>
+        <summary>So richtest du ihn ein</summary>
+        <ol>
+          <li>Auf GitHub: <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+          <li>Repository access: <b>Only select repositories</b> → nur dieses Repo.</li>
+          <li>Permissions → Repository → <b>Contents: Read and write</b>. Sonst nichts.</li>
+          <li>Ablauf z. B. 1 Jahr. Token kopieren und unten einfügen.</li>
+        </ol>
+      </details>
+      <input class="txt" id="token" type="password" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub-Schlüssel">
+      <p class="tiny">Der Schlüssel bleibt nur in diesem Browser gespeichert. Er darf nur die Wächter-Datei in diesem Repo ändern.</p>
+    </div>
+  </div>
+</main>
+
+<div class="bar" id="bar">
+  <div class="bar-in" id="bar-in"></div>
+  <p class="status" id="status" role="status" style="max-width:560px;margin:6px auto 0"></p>
+</div>
+
+<script>
+(function () {
+  var CATALOG = {
+    'Skoda': ['Octavia', 'Superb', 'Kodiaq', 'Karoq', 'Fabia', 'Scala'],
+    'VW': ['Golf Variant', 'Passat Variant', 'Tiguan', 'Touran', 'Touareg', 'T-Roc'],
+    'Audi': ['A4 Avant', 'A6 Avant', 'A3', 'Q3', 'Q5'],
+    'Subaru': ['Outback', 'Forester', 'XV', 'Levorg'],
+    'Toyota': ['RAV4', 'Corolla Touring Sports', 'C-HR', 'Yaris'],
+    'Volvo': ['V60', 'V90', 'XC60', 'V70', 'XC40'],
+    'BMW': ['3er Touring', '5er Touring', 'X1', 'X3'],
+    'Mercedes-Benz': ['C-Klasse T-Modell', 'E-Klasse T-Modell', 'GLC'],
+    'Ford': ['Focus Station Wagon', 'Kuga'],
+    'Mazda': ['6 Kombi', 'CX-5'],
+    'Seat': ['Leon', 'Ateca'],
+    'Cupra': ['Leon', 'Formentor'],
+    'Dacia': ['Duster'],
+    'Hyundai': ['Tucson'],
+    'Kia': ['Sportage'],
+    'Mitsubishi': ['Outlander'],
+    'Suzuki': ['Vitara', 'S-Cross'],
+    'Nissan': ['Qashqai', 'X-Trail']
+  };
+  var BODIES = ['Kombi', 'SUV', 'Limousine', 'Kompakt', 'Van'];
+  var FUELS = ['Benzin', 'Diesel', 'Hybrid', 'Elektro'];
+  var PUSH = { sofort: 'Sofort', leise: 'Leise', abends: 'Um 18 Uhr' };
+  var FILE = 'waechter.json';
+  var TKEY = 'aw-token';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var chf = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "'"); };
+  function lsGet(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // Repo aus der Adresse: <besitzer>.github.io/<repo>/
+  var owner = location.hostname.split('.')[0];
+  var repo = location.pathname.split('/').filter(Boolean)[0] || 'auto-waechter';
+  var api = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + FILE;
+
+  var cfg = null, sha = null, saved = '', draft = null, draftIdx = -1;
+
+  function b64dec(s) { var bin = atob(s.replace(/\s/g, '')), b = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return new TextDecoder().decode(b); }
+  function b64enc(s) { var b = new TextEncoder().encode(s), bin = ''; for (var i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]); return btoa(bin); }
+  function headers() {
+    var h = { 'Accept': 'application/vnd.github+json' };
+    var t = lsGet(TKEY);
+    if (t) h.Authorization = 'Bearer ' + t;
+    return h;
+  }
+  function status(msg, kind) { $('status').textContent = msg || ''; $('status').className = 'status' + (kind ? ' ' + kind : ''); }
+  function dirty() { return cfg && JSON.stringify(cfg) !== saved; }
+
+  // Ausserhalb von GitHub Pages (lokale Vorschau): Datei direkt lesen, Speichern geht dann nicht.
+  var local = !/\.github\.io$/.test(location.hostname);
+
+  function load() {
+    var req = local
+      ? fetch('../' + FILE, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('Datei nicht gefunden'); return r.text(); }).then(function (t) { return { sha: null, raw: t }; })
+      : fetch(api + '?t=' + Date.now(), { headers: headers(), cache: 'no-store' }).then(function (r) {
+          if (!r.ok) throw new Error(r.status === 404 ? 'Datei nicht gefunden' : 'GitHub antwortet mit ' + r.status);
+          return r.json();
+        }).then(function (j) { return { sha: j.sha, raw: b64dec(j.content) }; });
+    req.then(function (j) {
+      sha = j.sha;
+      cfg = JSON.parse(j.raw);
+      saved = JSON.stringify(cfg);
+      $('sub').textContent = 'Jeder Wächter sucht auf allen Plattformen. Änderungen gelten ab dem nächsten Lauf, also nach spätestens 10 Minuten.';
+      renderList();
+    }).catch(function (e) {
+      $('sub').textContent = 'Konnte die Wächter nicht laden: ' + e.message + '. Prüfe die Internetverbindung und lade die Seite neu.';
+    });
+  }
+
+  function save() {
+    if (local) { status('Lokale Vorschau: Speichern geht nur auf GitHub Pages.', 'err'); return; }
+    var t = lsGet(TKEY);
+    if (!t) { status('Zum Speichern braucht es den Schlüssel unten.', 'err'); $('token').focus(); return; }
+    var body = JSON.stringify(cfg, null, 2) + '\n';
+    status('Speichere …');
+    fetch(api, { method: 'PUT', headers: Object.assign(headers(), { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: 'Wächter geändert (iPhone)', content: b64enc(body), sha: sha }) })
+      .then(function (r) {
+        if (r.status === 401 || r.status === 403) throw new Error('Der Schlüssel ist ungültig oder darf diese Datei nicht ändern.');
+        if (r.status === 409) throw new Error('Die Datei wurde inzwischen anderswo geändert. Seite neu laden und nochmals ändern.');
+        if (!r.ok) throw new Error('GitHub antwortet mit ' + r.status + '.');
+        return r.json();
+      }).then(function (j) {
+        sha = j.content.sha; saved = JSON.stringify(cfg);
+        status('Gespeichert. Gilt ab dem nächsten Lauf.', 'ok'); renderBar();
+      }).catch(function (e) { status(e.message, 'err'); });
+  }
+
+  function summary(w) {
+    var p = [];
+    p.push(w.models && w.models.length ? w.models.map(function (m) { return m.brand + ' ' + (m.model || '(alle Modelle)'); }).join(', ') : 'Alle Marken');
+    if (w.body && w.body.length) p.push(w.body.join('/'));
+    if (w.awd) p.push('4x4');
+    p.push('bis CHF ' + chf(w.maxPrice));
+    if (w.maxKm) p.push('max. ' + chf(w.maxKm) + ' km');
+    if (w.minYear) p.push('ab Jg. ' + w.minYear);
+    if (w.fuel && w.fuel.length) p.push(w.fuel.join('/'));
+    if (w.gear && w.gear !== 'egal') p.push(w.gear);
+    p.push(w.radius ? 'bis ' + w.radius + ' km' : 'ganze Schweiz');
+    if (w.seller && w.seller !== 'egal') p.push('nur ' + w.seller);
+    if (w.mfk) p.push('ab MFK');
+    p.push('Push ' + PUSH[w.push || 'sofort'].toLowerCase());
+    return p.join(' · ');
+  }
+
+  function renderList() {
+    $('editor').hidden = true; $('list').hidden = false; $('general').hidden = false;
+    $('title').textContent = 'Auto-Wächter';
+    var h = cfg.waechter.map(function (w, i) {
+      return '<div class="card' + (w.on ? '' : ' off') + '"><div class="top"><span class="w-name">' + esc(w.name) + '</span>' +
+        '<input class="switch" type="checkbox" data-on="' + i + '" aria-label="' + esc(w.name) + ' aktiv"' + (w.on ? ' checked' : '') + '></div>' +
+        '<div class="w-sum">' + esc(summary(w)) + '</div>' +
+        '<button type="button" class="link" data-edit="' + i + '">Bearbeiten</button></div>';
+    }).join('') + '<button type="button" class="add" id="add">+ Neuer Wächter</button>';
+    $('list').innerHTML = h;
+    document.querySelectorAll('[data-on]').forEach(function (el) { el.addEventListener('change', function () { cfg.waechter[+el.dataset.on].on = el.checked; renderList(); }); });
+    document.querySelectorAll('[data-edit]').forEach(function (el) { el.addEventListener('click', function () { openEditor(+el.dataset.edit); }); });
+    $('add').addEventListener('click', function () { openEditor(-1); });
+    var n = cfg.nachtruhe || (cfg.nachtruhe = { an: true, von_uhr: 22, bis_uhr: 7 });
+    $('night').checked = !!n.an;
+    renderBar();
+  }
+
+  function renderBar() {
+    if (!$('editor').hidden) {
+      $('bar-in').innerHTML = '<button type="button" class="btn" id="e-cancel">Abbrechen</button><button type="button" class="btn primary" id="e-ok">Übernehmen</button>';
+      $('e-cancel').addEventListener('click', function () { draft = null; renderList(); window.scrollTo(0, 0); });
+      $('e-ok').addEventListener('click', applyDraft);
+      return;
+    }
+    var d = dirty();
+    $('bar-in').innerHTML = '<button type="button" class="btn" id="reload"' + (d ? '' : ' disabled') + '>Verwerfen</button><button type="button" class="btn primary" id="save"' + (d ? '' : ' disabled') + '>' + (d ? 'Speichern' : 'Alles gespeichert') + '</button>';
+    $('reload').addEventListener('click', function () { status(''); load(); });
+    $('save').addEventListener('click', save);
+  }
+
+  function blank() {
+    return { id: 'w' + Date.now(), name: 'Neuer Wächter', on: true, models: [], body: ['Kombi'], awd: true, maxPrice: 17000, maxKm: 0, minYear: 0,
+      fuel: [], gear: 'egal', radius: 0, seller: 'egal', mfk: false, push: 'sofort', drops: true };
+  }
+  function openEditor(i) {
+    draftIdx = i;
+    draft = i >= 0 ? JSON.parse(JSON.stringify(cfg.waechter[i])) : blank();
+    $('list').hidden = true; $('general').hidden = true; $('editor').hidden = false;
+    $('title').textContent = i >= 0 ? 'Wächter bearbeiten' : 'Neuer Wächter';
+    $('sub').textContent = 'Nichts gewählt heisst: egal.';
+    renderEditor(); renderBar(); window.scrollTo(0, 0);
+  }
+  function applyDraft() {
+    draft.name = (draft.name || '').trim() || 'Wächter ohne Namen';
+    if (draftIdx >= 0) cfg.waechter[draftIdx] = draft; else cfg.waechter.push(draft);
+    draft = null;
+    $('sub').textContent = 'Noch nicht gespeichert. Tippe unten auf „Speichern“.';
+    renderList(); window.scrollTo(0, 0);
+  }
+  function segs(id, opts, val) {
+    return '<div class="segs" id="' + id + '">' + opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (String(val) === String(o[0])) + '">' + o[1] + '</button>'; }).join('') + '</div>';
+  }
+  function rng(id, label, min, max, step, val, text, hint) {
+    return '<div class="field"><div class="range-top"><label for="' + id + '">' + label + '</label><b id="v-' + id + '">' + text + '</b></div>' +
+      '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '">' + (hint ? '<span class="tiny">' + hint + '</span>' : '') + '</div>';
+  }
+  var kmT = function (v) { return v ? chf(v) + ' km' : 'egal'; };
+  var yT = function (v) { return v ? 'ab ' + v : 'egal'; };
+  var rT = function (v) { return v ? v + ' km' : 'ganze Schweiz'; };
+
+  function renderEditor() {
+    var d = draft;
+    var h = '<div class="card"><div class="field"><label class="lbl" for="e-name">Name</label><input class="txt" id="e-name" value="' + esc(d.name) + '"></div></div>' +
+      '<div class="card"><span class="lbl">Marken und Modelle</span>' +
+      '<div class="pills">' + (d.models.length ? d.models.map(function (m, i) { return '<span class="pill">' + esc(m.brand + ' ' + (m.model || '· alle Modelle')) + '<button type="button" data-rm="' + i + '" aria-label="Entfernen">×</button></span>'; }).join('') : '<span class="tiny">Noch keine Marke gewählt</span>') + '</div>' +
+      '<div class="add-model"><select id="e-brand" aria-label="Marke">' + Object.keys(CATALOG).map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select>' +
+      '<select id="e-model" aria-label="Modell"></select><button type="button" class="plus" id="e-add" aria-label="Hinzufügen">+</button></div>' +
+      '<span class="tiny">Ohne Marke sucht nur die Mail-Brücke. tutti wird pro Modell abgefragt.</span></div>' +
+      '<div class="card"><span class="lbl">Aufbau</span><div class="pills" id="e-body">' + BODIES.map(function (b) { return '<button type="button" class="toggle" data-v="' + b + '" aria-pressed="' + (d.body.indexOf(b) >= 0) + '">' + b + '</button>'; }).join('') + '</div>' +
+      '<span class="lbl">Antrieb</span>' + segs('e-awd', [['false', 'Egal'], ['true', 'Nur 4x4']], d.awd) + '</div>' +
+      '<div class="card">' +
+      rng('e-price', 'Max. Preis', 3000, 60000, 500, d.maxPrice, 'CHF ' + chf(d.maxPrice)) +
+      rng('e-km', 'Max. km-Stand', 40000, 260000, 10000, d.maxKm || 260000, kmT(d.maxKm)) +
+      rng('e-year', 'Jahrgang', 2009, 2025, 1, d.minYear || 2009, yT(d.minYear)) +
+      rng('e-rad', 'Umkreis', 10, 210, 10, d.radius || 210, rT(d.radius), 'Luftlinie ab deinem Wohnort') + '</div>' +
+      '<div class="card"><span class="lbl">Treibstoff</span><div class="pills" id="e-fuel">' + FUELS.map(function (f) { return '<button type="button" class="toggle" data-v="' + f + '" aria-pressed="' + (d.fuel.indexOf(f) >= 0) + '">' + f + '</button>'; }).join('') + '</div>' +
+      '<span class="lbl">Getriebe</span>' + segs('e-gear', [['egal', 'Egal'], ['Automat', 'Automat'], ['Manuell', 'Manuell']], d.gear) +
+      '<span class="lbl">Verkäufer</span>' + segs('e-seller', [['egal', 'Egal'], ['Händler', 'Händler'], ['Privat', 'Privat']], d.seller) + '</div>' +
+      '<div class="card"><div class="row"><label for="e-mfk">Nur „ab MFK“<span class="hint">Frisch geprüft, sofort einlösbar</span></label><input class="switch" type="checkbox" id="e-mfk"' + (d.mfk ? ' checked' : '') + '></div>' +
+      '<div class="row"><label for="e-drops">Preissenkungen melden<span class="hint">Auch wenn ein Auto erst durch die Senkung ins Budget fällt</span></label><input class="switch" type="checkbox" id="e-drops"' + (d.drops ? ' checked' : '') + '></div></div>' +
+      '<div class="card"><span class="lbl">Push</span>' + segs('e-push', [['sofort', 'Sofort'], ['leise', 'Leise'], ['abends', 'Um 18 Uhr']], d.push) +
+      '<span class="tiny">Leise: ohne Ton. Um 18 Uhr: eine Sammel-Meldung pro Tag.</span></div>' +
+      (draftIdx >= 0 ? '<button type="button" class="btn danger" id="e-del">Wächter löschen</button>' : '');
+    $('editor').innerHTML = h;
+
+    function fillModels() { $('e-model').innerHTML = '<option value="">Alle Modelle</option>' + CATALOG[$('e-brand').value].map(function (m) { return '<option>' + m + '</option>'; }).join(''); }
+    fillModels();
+    $('e-brand').addEventListener('change', fillModels);
+    function rerender() { var y = window.scrollY; renderEditor(); window.scrollTo(0, y); }
+    $('e-add').addEventListener('click', function () {
+      var m = { brand: $('e-brand').value, model: $('e-model').value };
+      if (d.models.some(function (x) { return x.brand === m.brand && (x.model === m.model || !x.model); })) { status(m.brand + ' ' + (m.model || '') + ' ist schon drin.'); return; }
+      if (!m.model) d.models = d.models.filter(function (x) { return x.brand !== m.brand; });
+      d.models.push(m); status(''); rerender();
+    });
+    document.querySelectorAll('[data-rm]').forEach(function (b) { b.addEventListener('click', function () { d.models.splice(+b.dataset.rm, 1); rerender(); }); });
+    $('e-name').addEventListener('input', function (e) { d.name = e.target.value; });
+    function multi(id, key) {
+      document.querySelectorAll('#' + id + ' .toggle').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var v = b.dataset.v, on = d[key].indexOf(v) >= 0;
+          d[key] = on ? d[key].filter(function (x) { return x !== v; }) : d[key].concat(v);
+          b.setAttribute('aria-pressed', String(!on));
+        });
+      });
+    }
+    multi('e-body', 'body'); multi('e-fuel', 'fuel');
+    function seg(id, set) {
+      document.querySelectorAll('#' + id + ' button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          document.querySelectorAll('#' + id + ' button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+          set(b.dataset.v);
+        });
+      });
+    }
+    seg('e-awd', function (v) { d.awd = v === 'true'; });
+    seg('e-gear', function (v) { d.gear = v; });
+    seg('e-seller', function (v) { d.seller = v; });
+    seg('e-push', function (v) { d.push = v; });
+    $('e-price').addEventListener('input', function (e) { d.maxPrice = +e.target.value; $('v-e-price').textContent = 'CHF ' + chf(d.maxPrice); });
+    $('e-km').addEventListener('input', function (e) { var v = +e.target.value; d.maxKm = v >= 260000 ? 0 : v; $('v-e-km').textContent = kmT(d.maxKm); });
+    $('e-year').addEventListener('input', function (e) { var v = +e.target.value; d.minYear = v <= 2009 ? 0 : v; $('v-e-year').textContent = yT(d.minYear); });
+    $('e-rad').addEventListener('input', function (e) { var v = +e.target.value; d.radius = v >= 210 ? 0 : v; $('v-e-rad').textContent = rT(d.radius); });
+    $('e-mfk').addEventListener('change', function (e) { d.mfk = e.target.checked; });
+    $('e-drops').addEventListener('change', function (e) { d.drops = e.target.checked; });
+    var del = $('e-del');
+    if (del) {
+      var armed = false;
+      del.addEventListener('click', function () {
+        if (!armed) { armed = true; del.textContent = 'Wirklich löschen? Nochmals tippen'; return; }
+        cfg.waechter.splice(draftIdx, 1); draft = null;
+        $('sub').textContent = 'Noch nicht gespeichert. Tippe unten auf „Speichern“.';
+        renderList(); window.scrollTo(0, 0);
+      });
+    }
+  }
+
+  function keyState() {
+    $('key-state').textContent = lsGet(TKEY) ? 'Schlüssel ist in diesem Browser gespeichert.' : 'Noch kein Schlüssel. Ohne ihn kannst du die Wächter ansehen, aber nicht speichern.';
+  }
+  $('token').addEventListener('change', function (e) { lsSet(TKEY, e.target.value.trim()); e.target.value = ''; keyState(); status('Schlüssel gespeichert.', 'ok'); });
+  $('night').addEventListener('change', function (e) { cfg.nachtruhe.an = e.target.checked; renderBar(); });
+  window.addEventListener('beforeunload', function (e) { if (dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  keyState();
+  load();
+})();
+</script>
+</body>
+</html>

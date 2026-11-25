@@ -1,0 +1,5 @@
+state/
+.env.local
+__pycache__/
+*.tmp
+*.eml

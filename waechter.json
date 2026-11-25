@@ -1,0 +1,24 @@
+{
+  "nachtruhe": { "an": true, "von_uhr": 22, "bis_uhr": 7 },
+  "max_einzel_pushes_pro_lauf": 8,
+  "waechter": [
+    {
+      "id": "w1",
+      "name": "Octavia Kombi 4x4",
+      "on": true,
+      "models": [{ "brand": "Skoda", "model": "Octavia" }],
+      "body": ["Kombi"],
+      "awd": true,
+      "maxPrice": 17000,
+      "maxKm": 150000,
+      "minYear": 2016,
+      "fuel": ["Benzin"],
+      "gear": "Automat",
+      "radius": 100,
+      "seller": "egal",
+      "mfk": false,
+      "push": "sofort",
+      "drops": true
+    }
+  ]
+}
